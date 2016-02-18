@@ -1,8 +1,10 @@
 package stacknqueue_test
+
 import (
 	"testing"
 	sq "github.com/morganhein/stacknqueue"
 	"sync"
+	"time"
 )
 
 func TestQueueNotThreadsafe(t *testing.T) {
@@ -72,11 +74,11 @@ func TestHelpers(t *testing.T) {
 	for i := 0; i < 200; i++ {
 		q.Push(i)
 	}
-	if q.IsEmpty() == true {
+	if q.IsEmpty() {
 		t.Error("IsEmpty returned incorrect result. Expected to be false but got true.")
 	}
 	q.Empty()
-	if q.IsEmpty() != true {
+	if !q.IsEmpty() {
 		t.Error("IsEmpty returned incorrect result. Expected to be true but got false.")
 	}
 }
@@ -86,24 +88,25 @@ func TestQueueThreadsafe(t *testing.T) {
 	var wg sync.WaitGroup
 
 	wg.Add(3)
-
-	go fillList(q, 200, &wg)
-	go fillList(q, 200, &wg)
-	go fillList(q, 200, &wg)
+	c := make(chan bool, 3)
+	go fillList(q, 200, &wg, c)
+	go fillList(q, 200, &wg, c)
+	go fillList(q, 200, &wg, c)
 
 	wg.Wait()
+	_ = <-c
+	_ = <-c
+	_ = <-c
 
 	if q.Len() != 600 {
 		t.Error("Wrong length count detected. Expected", 600, "got", q.Len())
 	}
 
 	wg.Add(2)
-	c := make(chan bool)
+
+	go fillList(q, 1500, &wg, c)
+	time.Sleep(20 * time.Millisecond) // wait so that the fillList can begin shoving items into the Queue
 	go emptyList(q, &wg, c)
-
-	fillList(q, 1500, &wg)
-
-	c <- true
 
 	wg.Wait()
 
@@ -112,29 +115,27 @@ func TestQueueThreadsafe(t *testing.T) {
 	}
 }
 
-func fillList(q *sq.StackNQueue, c int, wg *sync.WaitGroup) {
-	defer wg.Done()
-	for i := 0; i < c; i++ {
+func fillList(q *sq.StackNQueue, size int, wg *sync.WaitGroup, c chan bool) {
+	for i := 0; i < size; i++ {
 		q.Queue(i)
 	}
+	c <- true
+	wg.Done()
 }
 
 func emptyList(q *sq.StackNQueue, wg *sync.WaitGroup, c chan bool) {
 	defer wg.Done()
 	select {
-	case m := <-c:
-		if m == true {
-			emptyHelper(q)
-			close(c)
-			return
-		}
+	case _ = <-c:
+		emptyHelper(q)
+		return
 	default:
 		emptyHelper(q)
 	}
 }
 
 func emptyHelper(q *sq.StackNQueue) {
-	for q.IsEmpty() == false {
+	for !q.IsEmpty() {
 		_ = q.Pop()
 	}
 }

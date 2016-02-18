@@ -8,12 +8,6 @@ type node struct {
 	prev *node
 }
 
-type Stacker interface {
-	Queue()
-	Dequeue()
-	Len()
-}
-
 type StackNQueue struct {
 	head       *node
 	tail       *node
@@ -21,7 +15,7 @@ type StackNQueue struct {
 	threadSafe bool
 	lock       *sync.Mutex
 }
-// NewStackNQueue creates a new List object that can be used as a
+// NewStackNQueue creates a new LinkedList object that can be used as a
 // Stack and/or a Queue and returns a pointer
 func NewStackNQueue(threadSafe bool) *StackNQueue {
 	q := &StackNQueue{threadSafe:threadSafe}
@@ -37,6 +31,13 @@ func (q *StackNQueue) Len() int {
 		q.lock.Lock()
 		defer q.lock.Unlock()
 	}
+
+	//	defer func() {
+	//		if q.threadSafe {
+	//			defer q.lock.Unlock()
+	//		}
+	//	}()
+
 	return q.count
 }
 
@@ -46,6 +47,12 @@ func (q *StackNQueue) Push(item interface{}) {
 		q.lock.Lock()
 		defer q.lock.Unlock()
 	}
+
+	//	defer func() {
+	//		if q.threadSafe {
+	//			defer q.lock.Unlock()
+	//		}
+	//	}()
 
 	n := &node{data: item}
 
@@ -65,7 +72,14 @@ func (q *StackNQueue) Pop() interface{} {
 	if q.threadSafe {
 		q.lock.Lock()
 		defer q.lock.Unlock()
+
 	}
+
+	//	defer func() {
+	//		if q.threadSafe {
+	//			defer q.lock.Unlock()
+	//		}
+	//	}()
 
 	if q.head == nil {
 		return nil
@@ -88,13 +102,15 @@ func (q *StackNQueue) Pop() interface{} {
 func (q *StackNQueue) Queue(item interface{}) {
 	if q.threadSafe {
 		q.lock.Lock()
+		defer q.lock.Unlock()
+
 	}
 
-	defer func() {
-		if q.threadSafe {
-			defer q.lock.Unlock()
-		}
-	}()
+//	defer func() {
+//		if q.threadSafe {
+//			defer q.lock.Unlock()
+//		}
+//	}()
 
 	n := &node{data: item}
 
@@ -112,11 +128,19 @@ func (q *StackNQueue) Queue(item interface{}) {
 
 // Dequeue removes and returns the last item in the List.
 // This is a crazy action.
-func (q *StackNQueue) Dequeue() (item interface{}) {
+func (q *StackNQueue) Dequeue() interface{} {
 	if q.threadSafe {
 		q.lock.Lock()
 		defer q.lock.Unlock()
+
 	}
+
+//	defer func() {
+//		if q.threadSafe {
+//			defer q.lock.Unlock()
+//		}
+//	}()
+
 	//No items in the list
 	if q.tail == nil {
 		return nil
@@ -145,7 +169,14 @@ func (q *StackNQueue) Peek() interface{} {
 	if q.threadSafe {
 		q.lock.Lock()
 		defer q.lock.Unlock()
+
 	}
+
+//	defer func() {
+//		if q.threadSafe {
+//			defer q.lock.Unlock()
+//		}
+//	}()
 
 	n := q.head
 	if n == nil {
@@ -156,11 +187,22 @@ func (q *StackNQueue) Peek() interface{} {
 }
 
 func (q *StackNQueue) Empty() {
+	if q.threadSafe {
+		q.lock.Lock()
+		defer q.lock.Unlock()
+
+	}
+
 	q.count = 0
 	q.head = nil
 	q.tail = nil
 }
 
 func (q *StackNQueue) IsEmpty() bool {
+	if q.threadSafe {
+		q.lock.Lock()
+		defer q.lock.Unlock()
+	}
+
 	return q.count == 0
 }
