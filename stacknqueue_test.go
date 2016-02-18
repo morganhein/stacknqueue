@@ -104,7 +104,7 @@ func TestQueueThreadsafe(t *testing.T) {
 
 	wg.Add(2)
 
-	go fillList(q, 1500, &wg, c)
+	go fillList(q, 1500000, &wg, c)
 	time.Sleep(20 * time.Millisecond) // wait so that the fillList can begin shoving items into the Queue
 	go emptyList(q, &wg, c)
 
@@ -116,11 +116,13 @@ func TestQueueThreadsafe(t *testing.T) {
 }
 
 func fillList(q *sq.StackNQueue, size int, wg *sync.WaitGroup, c chan bool) {
+	defer func() {
+		c <- true
+		wg.Done()
+	}()
 	for i := 0; i < size; i++ {
 		q.Queue(i)
 	}
-	c <- true
-	wg.Done()
 }
 
 func emptyList(q *sq.StackNQueue, wg *sync.WaitGroup, c chan bool) {

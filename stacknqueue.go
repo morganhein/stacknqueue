@@ -32,12 +32,6 @@ func (q *StackNQueue) Len() int {
 		defer q.lock.Unlock()
 	}
 
-	//	defer func() {
-	//		if q.threadSafe {
-	//			defer q.lock.Unlock()
-	//		}
-	//	}()
-
 	return q.count
 }
 
@@ -47,12 +41,6 @@ func (q *StackNQueue) Push(item interface{}) {
 		q.lock.Lock()
 		defer q.lock.Unlock()
 	}
-
-	//	defer func() {
-	//		if q.threadSafe {
-	//			defer q.lock.Unlock()
-	//		}
-	//	}()
 
 	n := &node{data: item}
 
@@ -74,12 +62,6 @@ func (q *StackNQueue) Pop() interface{} {
 		defer q.lock.Unlock()
 
 	}
-
-	//	defer func() {
-	//		if q.threadSafe {
-	//			defer q.lock.Unlock()
-	//		}
-	//	}()
 
 	if q.head == nil {
 		return nil
@@ -106,12 +88,6 @@ func (q *StackNQueue) Queue(item interface{}) {
 
 	}
 
-//	defer func() {
-//		if q.threadSafe {
-//			defer q.lock.Unlock()
-//		}
-//	}()
-
 	n := &node{data: item}
 
 	if q.tail == nil {
@@ -134,12 +110,6 @@ func (q *StackNQueue) Dequeue() interface{} {
 		defer q.lock.Unlock()
 
 	}
-
-//	defer func() {
-//		if q.threadSafe {
-//			defer q.lock.Unlock()
-//		}
-//	}()
 
 	//No items in the list
 	if q.tail == nil {
@@ -171,12 +141,6 @@ func (q *StackNQueue) Peek() interface{} {
 		defer q.lock.Unlock()
 
 	}
-
-//	defer func() {
-//		if q.threadSafe {
-//			defer q.lock.Unlock()
-//		}
-//	}()
 
 	n := q.head
 	if n == nil {
