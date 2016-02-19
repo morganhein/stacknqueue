@@ -11,7 +11,7 @@ type node struct {
 type StackNQueue struct {
 	head       *node
 	tail       *node
-	count      int
+	count      uint64
 	threadSafe bool
 	lock       *sync.Mutex
 }
@@ -26,7 +26,7 @@ func NewStackNQueue(threadSafe bool) *StackNQueue {
 }
 
 // Len returns the number of elements in the List
-func (q *StackNQueue) Len() int {
+func (q *StackNQueue) Len() uint64 {
 	if q.threadSafe {
 		q.lock.Lock()
 		defer q.lock.Unlock()
@@ -60,7 +60,6 @@ func (q *StackNQueue) Pop() interface{} {
 	if q.threadSafe {
 		q.lock.Lock()
 		defer q.lock.Unlock()
-
 	}
 
 	if q.head == nil {
@@ -78,14 +77,12 @@ func (q *StackNQueue) Pop() interface{} {
 	return n.data
 }
 
-
 // Queue adds an item to the end of the List.
 // This is a FIFO action.
 func (q *StackNQueue) Queue(item interface{}) {
 	if q.threadSafe {
 		q.lock.Lock()
 		defer q.lock.Unlock()
-
 	}
 
 	n := &node{data: item}
@@ -108,7 +105,6 @@ func (q *StackNQueue) Dequeue() interface{} {
 	if q.threadSafe {
 		q.lock.Lock()
 		defer q.lock.Unlock()
-
 	}
 
 	//No items in the list
@@ -130,7 +126,6 @@ func (q *StackNQueue) Dequeue() interface{} {
 
 	q.count--
 	return response.data
-
 }
 
 // Peek returns the value at the front of the List
@@ -139,7 +134,6 @@ func (q *StackNQueue) Peek() interface{} {
 	if q.threadSafe {
 		q.lock.Lock()
 		defer q.lock.Unlock()
-
 	}
 
 	n := q.head
@@ -154,7 +148,6 @@ func (q *StackNQueue) Empty() {
 	if q.threadSafe {
 		q.lock.Lock()
 		defer q.lock.Unlock()
-
 	}
 
 	q.count = 0

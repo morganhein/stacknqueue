@@ -4,7 +4,6 @@ import (
 	"testing"
 	sq "github.com/morganhein/stacknqueue"
 	"sync"
-	"time"
 )
 
 func TestQueueNotThreadsafe(t *testing.T) {
@@ -104,9 +103,8 @@ func TestQueueThreadsafe(t *testing.T) {
 
 	wg.Add(2)
 
-	go fillList(q, 1500000, &wg, c)
-	time.Sleep(20 * time.Millisecond) // wait so that the fillList can begin shoving items into the Queue
 	go emptyList(q, &wg, c)
+	go fillList(q, 1500000, &wg, c)
 
 	wg.Wait()
 
@@ -127,12 +125,16 @@ func fillList(q *sq.StackNQueue, size int, wg *sync.WaitGroup, c chan bool) {
 
 func emptyList(q *sq.StackNQueue, wg *sync.WaitGroup, c chan bool) {
 	defer wg.Done()
-	select {
-	case _ = <-c:
-		emptyHelper(q)
-		return
-	default:
-		emptyHelper(q)
+	for {
+		select {
+		case finished := <-c:
+			if finished {
+				emptyHelper(q)
+				return
+			}
+		default:
+			emptyHelper(q)
+		}
 	}
 }
 
